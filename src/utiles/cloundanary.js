@@ -10,14 +10,15 @@ cloudinary.config({
 
 const uplodeOnCloudnary= async (localfilepath)=>{
  try {
-        if(!localfilepath) return null
+         if(!localfilepath) return null
         //uplod the file on cloundanry
         const response=await cloudinary.uploader.upload(localfilepath,{
          resource_type:"auto"
         })
         //file has been uploded successfully
         console.log(`:file uploded success fully on cloundanar ${response.url}`)
-        return response
+        //fs.unlinkSync(localfilepath);
+        return response;
  } catch (error) {
   fs.unlinkSync(localfilepath) // remove the locally seved file
   return null;

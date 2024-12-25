@@ -27,7 +27,7 @@ const UserSchema=mongoose.Schema(
     lowercase:true
     
    },
-   Avtar:{
+   Avatar:{
     type:String, // cloudnary
     required:true,
    },
@@ -43,7 +43,7 @@ const UserSchema=mongoose.Schema(
    },
    RefreshToken:{
     type:String,
-    required:true,
+    required:false,
     unique:true
    },
    WatchHistory:{
@@ -57,7 +57,7 @@ const UserSchema=mongoose.Schema(
 
 
 UserSchema.pre("save",async function(next) {
-     if(this.ismodified("password")){
+     if(this.isModified("password")){
       this.Password= await bcrypt.hash("password",10)
      }
      else{
@@ -86,16 +86,16 @@ UserSchema.methods.genrateAccessToken=async function(){
 }
 
 UserSchema.methods.genratRefreshToken=async function(){
- const Token= await jwt.sign
+ const Token=  await jwt.sign
  (
       {
-         _id:this._id,
-         email:this.Email,
+          _id:this._id,
+          email:this.Email,
           user:this.User
        },
          process.env.REFRESH_TOKEN_SECRATE,
        {
-      expiresIn:process.env.REFRESH_TOKEN_EXPIR
+      expiresIn:process.env.REFRESH_TOKEN_EXPIRY
        }
 
 )

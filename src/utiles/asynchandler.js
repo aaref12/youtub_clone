@@ -1,11 +1,13 @@
 const asynchandler= (requestHander)=>{
     return (req,res,next)=>{
-          Promise.resolve(requestHander(req,res,next)).catch((err)=>next(err))
+          Promise
+          .resolve(requestHander(req,res,next))
+          .catch((err)=>next(console.log(err)))
          }
 }
 
 
-export default asynchandler
+export { asynchandler}
 
 
 
