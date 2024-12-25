@@ -58,7 +58,7 @@ const UserSchema=mongoose.Schema(
 
 UserSchema.pre("save",async function(next) {
      if(this.ismodified("password")){
-      this.Password=bcrypt.hash("password",10)
+      this.Password= await bcrypt.hash("password",10)
      }
      else{
        next()
