@@ -3,6 +3,26 @@ import {ApiError} from '../utiles/apierr.js';
 import { User } from '../models/user.model.js';
 import {uplodeOnCloudnary} from '../utiles/cloundanary.js';
 import {ApiResponse} from '../utiles/ApiResponse.js'
+    
+
+
+const  GentrateRefereshAndAcessToken= async  (user_id)=> {
+  try {
+       const user=User.findById(user_id)
+      const accesstoken=user.genrateAccessToken()
+      const Refreshtoken=user.genratRefreshToken()
+      user.Refreshtoken=Refreshtoken
+     await user.save({validateBeforeSave:false})
+
+     return {accesstoken,Refreshtoken}
+
+  } catch (error) {
+    throw new ApiError(500,"wait refreshtoken is genrate")
+  }
+}
+
+
+
 
 
 const  userragister=(async (req,res)=>{
@@ -67,4 +87,82 @@ const  userragister=(async (req,res)=>{
     )
 })
 
-export default userragister 
+
+// login user
+
+const LoginUser=asynchandler(async(req,res)=>{
+        //req.body==access.vlaue
+        // username or email
+        //find the user
+        // password check
+        //genrate refresh token and access token
+        //send cookie
+const {userName,Email,Password}=req.body
+         if(!userName || !Email){
+          throw new ApiError(400,"userName and Email not found please correct userName and Email")
+         }
+        const user= await User.findOne({
+          $or: [{userName},{Email}]
+          })
+          if(!user){
+            throw new ApiError(404,"user is not exist")
+          }
+         const isPasswordvalid=await User.isPasswordIscorrect(Password)
+         if(!isPasswordvalid){
+          throw new ApiError(401,"password incorect")
+        }
+      const {accesstoken,Refreshtoken}= await GentrateRefereshAndAcessToken(user._id)
+    const LogedInUser=  User.findById(User._id).select("-Password -RefreshToken")
+
+    const options={
+      httpOnly:true,
+      secure:true
+    }
+    return res
+    .status(200)
+    .cookie("accesstoken",accesstoken,options)
+    .cookie("Refreshtoken",Refreshtoken,options)
+    .json(
+      new ApiResponse(
+        {
+          user:LogedInUser,accesstoken,Refreshtoken,
+
+        },
+        "UserLogedIn successfully"
+      )
+    )
+
+})
+
+const logoutUser=asynchandler(async(req,res)=>{
+ await User.findByIdAndUpdate(
+  req.user._id,
+  {
+    $set:{
+      RefreshToken:undefined
+    }
+  },
+  {
+    new:true
+  }
+)
+const options={
+  httpOnly:true,
+  secure:true
+}
+return res
+.status(200)
+.clearcookie("accesstoken",accesstoken,options)
+.clearcookie("Refreshtoken",Refreshtoken,options)
+.json(
+new ApiResponse (200,{},'user is succesfully logout')
+)
+})
+
+
+
+export { 
+  userragister,
+  LoginUser,
+  logoutUser
+} 
