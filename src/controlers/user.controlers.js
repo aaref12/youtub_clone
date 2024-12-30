@@ -1,6 +1,7 @@
 import { asynchandler } from '../utiles/asynchandler.js';
 import {ApiError} from '../utiles/apierr.js';
-import { User } from '../models/user.model.js';
+import {User} from '../models/user.model.js';
+
 import {uplodeOnCloudnary} from '../utiles/cloundanary.js';
 import {ApiResponse} from '../utiles/ApiResponse.js'
     
@@ -8,7 +9,7 @@ import {ApiResponse} from '../utiles/ApiResponse.js'
 
 const  GentrateRefereshAndAcessToken= async  (user_id)=> {
   try {
-       const user=User.findById(user_id)
+       const user= await User.findById(user_id)
       const accesstoken=user.genrateAccessToken()
       const Refreshtoken=user.genratRefreshToken()
       user.Refreshtoken=Refreshtoken
@@ -49,9 +50,9 @@ const  userragister=(async (req,res)=>{
        const existeduser=User.findOne({
         $or:[{userName},{Email}]
        })
-      //  if(existeduser){
-      //    throw new ApiError(409,"user is already exists")
-      //  }
+        // if(existeduser){
+        //   throw new ApiError(409,"user is already exists")
+        // }
       const avatarLocalpath= req.files?.avatar[0]?.path
       const coverImageLocalpath= req.files?.coverImage[0]?.path
       if(!avatarLocalpath){
@@ -98,21 +99,28 @@ const LoginUser=asynchandler(async(req,res)=>{
         //genrate refresh token and access token
         //send cookie
 const {userName,Email,Password}=req.body
-         if(!userName || !Email){
-          throw new ApiError(400,"userName and Email not found please correct userName and Email")
-         }
+        console.log(userName)
+        console.log(Password)
+       if (!userName  && !Email){
+              throw new ApiError(400,"userName not found please correct userName and Email")
+          }
+         
         const user= await User.findOne({
-          $or: [{userName},{Email}]
-          })
+            $or: [{userName},{Email}]
+         
+             
+            })
           if(!user){
             throw new ApiError(404,"user is not exist")
           }
-         const isPasswordvalid=await User.isPasswordIscorrect(Password)
-         if(!isPasswordvalid){
+          const isPasswordvalid= await user.isPasswordIscorrect(Password)
+          console.log(isPasswordvalid)
+          if(!isPasswordvalid){
           throw new ApiError(401,"password incorect")
-        }
+
+          }
       const {accesstoken,Refreshtoken}= await GentrateRefereshAndAcessToken(user._id)
-    const LogedInUser=  User.findById(User._id).select("-Password -RefreshToken")
+    const LogedInUser= await User.findById(User._id).select("-Password -RefreshToken")
 
     const options={
       httpOnly:true,
@@ -133,30 +141,40 @@ const {userName,Email,Password}=req.body
     )
 
 })
-
-const logoutUser=asynchandler(async(req,res)=>{
+// logout
+const logoutUser= asynchandler ( async(req,res)=>{
  await User.findByIdAndUpdate(
-  req.user._id,
-  {
-    $set:{
-      RefreshToken:undefined
+    req.user._id,
+    {
+      $set:{
+        RefreshToken:undefined
+      }
+    },
+    {
+      new:true
     }
-  },
-  {
-    new:true
-  }
-)
-const options={
+      
+ )
+
+ const options={
   httpOnly:true,
   secure:true
 }
+
 return res
-.status(200)
-.clearcookie("accesstoken",accesstoken,options)
-.clearcookie("Refreshtoken",Refreshtoken,options)
-.json(
-new ApiResponse (200,{},'user is succesfully logout')
-)
+    .status(200)
+    .cookie("accesstoken",accesstoken,options)
+    .cookie("Refreshtoken",Refreshtoken,options)
+    .json(
+      new ApiResponse(
+        {
+          
+
+        },
+        "UserLogout successfully"
+      )
+    ) 
+
 })
 
 

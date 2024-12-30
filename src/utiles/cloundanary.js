@@ -17,7 +17,8 @@ const uplodeOnCloudnary= async (localfilepath)=>{
         })
         //file has been uploded successfully
         console.log(`:file uploded success fully on cloundanar ${response.url}`)
-        //fs.unlinkSync(localfilepath);
+
+        fs.unlinkSync(localfilepath);
         return response;
  } catch (error) {
   fs.unlinkSync(localfilepath) // remove the locally seved file

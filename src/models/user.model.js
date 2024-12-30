@@ -57,17 +57,19 @@ const UserSchema=mongoose.Schema(
 
 
 UserSchema.pre("save",async function(next) {
-     if(this.isModified("password")){
-      this.Password= await bcrypt.hash("password",10)
+     if(this.isModified("Password")){
+      this.Password= await bcrypt.hash(this.Password,10)
      }
      else{
        next()
      }
 })
 
-UserSchema.methods.isPasswordIscorrect=async function(){
-  return bcrypt.Password=compare(Password,this.Password)
+UserSchema.methods.isPasswordIscorrect= async function(Password){
+   return await bcrypt.compare(Password,this
+    .Password)
 }
+
 UserSchema.methods.genrateAccessToken=async function(){
    const Token= await jwt.sign
    (
@@ -166,3 +168,5 @@ return Token
 
 
  export const User=mongoose.model("User",UserSchema)
+ 
+ 

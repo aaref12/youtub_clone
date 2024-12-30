@@ -8,7 +8,7 @@ export const verfyjwt=asynchandler(async(req,_,next)=>{
      ('Authorization')?.replace("Bearer","")
  if(!Token){
   throw new ApiError(401,"unauthorized token")
- }
+ }  
    const decodedToken=jwt.verify(Token,process.env.ACCESS_TOKEN_SECRATE)
   const user= await User.findById(decodedToken?._id).select("-Password -RefreshToken")
   if(!user){
