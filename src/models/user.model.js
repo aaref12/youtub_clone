@@ -33,7 +33,6 @@ const UserSchema=mongoose.Schema(
    },
    CoverImage:{
     type:String,//cloundary
-
    },
    Password:{
     type:String,
@@ -75,7 +74,7 @@ UserSchema.methods.genrateAccessToken=async function(){
    (
         {
            _id:this._id,
-           email:this.Email,
+            email:this.Email,
             user:this.User
          },
            process.env.ACCESS_TOKEN_SECRATE,

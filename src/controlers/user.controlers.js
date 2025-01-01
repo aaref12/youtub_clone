@@ -54,7 +54,7 @@ const  userragister=(async (req,res)=>{
         //   throw new ApiError(409,"user is already exists")
         // }
       const avatarLocalpath= req.files?.avatar[0]?.path
-      const coverImageLocalpath= req.files?.coverImage[0]?.path
+      const coverImageLocalpath= req.files?.coverImage?.path
       if(!avatarLocalpath){
         throw new ApiError(400,"avatar is required")
       }
