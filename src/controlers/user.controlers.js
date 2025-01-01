@@ -177,10 +177,103 @@ return res
 
 })
 
+const changeCurrentUser=asynchandler(async(req,res)=>{
+  const {oldPassword,newPassword}=req.body
+  const user=await User.findById(req.user?._id)
+ const ispasswordcurrect =await user.isPasswordIscorrect(oldPassword)
+ if(!ispasswordcurrect){
+  throw new ApiError(400,"invalide old password")
+ }
+ user.Password=newPassword
+  await user.seve({validateBeforeSave:false})
+  return res
+  .status(200)
+  .json(new ApiResponse(200,{},"password change succesfully"))
+})
 
+const getcurrentUser=asynchandler(async(req,res)=>{
+  return res
+  .status(200)
+  .json(200,req.user,'current user fatchs uccessfully')
+})
+
+const updateAccountDetails=asynchandler(async(req,res)=>{
+  const {FullName,Email}=req.body
+  if(!FullName || !Email){
+    throw new ApiError(400,'all feilds are required')
+  }
+ const user= User.findByIdAndUpdate(
+    req.user?._id,
+    {
+     $set:{FullName,Email}
+    },
+    {
+      new:true
+    }
+  ).select("-Password")
+  return res
+  .status(200)
+  .json(new ApiResponse(200,"Account Details Updated successfully"))
+})
+
+const updateUserAvatar=asynchandler(async(req,res)=>{
+ const avatarLocalpath= req.file?.path
+ if(!avatarLocalpath){
+  throw new ApiError(400,"Avatar file is missing")
+ }
+ const avatar=await uplodeOnCloudnary(avatarLocalpath)
+ if(!avatar.url){
+  throw new ApiError(400,"Avatar file is missing")
+ }
+ await user.findByIdAndUpdate(
+  req.user?._id,
+  {
+    $set({
+      Avatar:Avatar.url
+    })
+  },{
+    new:true
+  }
+).select('-Password')
+return res
+ .status(200)
+ .json(new ApiResponse(200,user,'Avatar successfuuly'))
+ })
+ 
+
+
+const updateUserCoverImage=asynchandler(async(req,res)=>{
+  const CoverImageLocalpath= req.file?.path
+  if(!CoverImageLocalpath){
+   throw new ApiError(400,"CoverImage file is missing")
+  }
+  const coverImage=await uplodeOnCloudnary(CoverImageLocalpath)
+  if(!coverImage.url){
+   throw new ApiError(400,"CoverImage file is missing")
+  }
+      const user=await user.findByIdAndUpdate(
+   req.user?._id,
+   {
+     $set({
+      CoverImage:CoverImage.url
+     })
+   },{
+     new:true
+   }
+ ).select('-Password')
+ return res
+ .status(200)
+ .json(new ApiResponse(200,user,'coverImages successfuuly'))
+ })
+ 
 
 export { 
   userragister,
   LoginUser,
-  logoutUser
+  logoutUser,
+  changeCurrentUser,
+  getcurrentUser,
+  updateAccountDetails,
+  updateUserAvatar,
+  updateUserCoverImage
 } 
