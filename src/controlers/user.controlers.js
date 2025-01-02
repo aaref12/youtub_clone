@@ -228,9 +228,9 @@ const updateUserAvatar=asynchandler(async(req,res)=>{
  await user.findByIdAndUpdate(
   req.user?._id,
   {
-    $set({
-      Avatar:Avatar.url
-    })
+    $set:{
+      Avatar:avatar.url
+    }
   },{
     new:true
   }
@@ -254,9 +254,9 @@ const updateUserCoverImage=asynchandler(async(req,res)=>{
       const user=await user.findByIdAndUpdate(
    req.user?._id,
    {
-     $set({
+     $set:{
       CoverImage:CoverImage.url
-     })
+     }
    },{
      new:true
    }
@@ -264,6 +264,74 @@ const updateUserCoverImage=asynchandler(async(req,res)=>{
  return res
  .status(200)
  .json(new ApiResponse(200,user,'coverImages successfuuly'))
+ })
+
+ const getUserChannelprofile=asynchandler(async(req,res)=>{
+  const {userName}=req.params
+  if(!userName?.trim()){
+    throw new ApiError(400,'userName is missing')
+  }
+  const channel=User.aggregate([
+    {
+      $match:{
+        userName:userName?.toLowercase()
+      }
+    },
+    {
+      $lookup:{
+        from:"subcriptions",
+        localfield:"_id",
+        foreignField:"channel",
+        as:"subscribers"
+      }
+    },
+    {
+      $lookup:{
+        from:"subcriptions",
+        localfield:"_id",
+        foreignField:"subscriber",
+        as:"subscribedTo"
+      }
+    },
+    {
+      addFields:{
+        subscriberCount:{
+          $size:"$subscriber"
+        },
+        channelsybscribeToCount:{
+          $size:"$subscribedTo"
+        },
+        isSybscribed:{
+          $cond:{
+            if:{$in:[req.user?._id,"$subscriber.subscriber"]},
+            then:true,
+            else:false
+    
+          }
+        }
+      }
+    },
+    {
+      $project:{
+        userName:1,
+        Email:1,
+        FullName:1,
+        Avatar:1,
+        CoverImage:1,
+        subscriberCount:1,
+        channelsybscribeToCount:1,
+      }
+    }
+  ])
+  console.log(channel)
+  if(!channel?.length){
+    throw new ApiError(404,'chennel does not exists')
+  }
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200,channel,'channel is created')
+  )
  })
  
 
@@ -275,5 +343,6 @@ export {
   getcurrentUser,
   updateAccountDetails,
   updateUserAvatar,
-  updateUserCoverImage
+  updateUserCoverImage,
+  getUserChannelprofile
 } 
