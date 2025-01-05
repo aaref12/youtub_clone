@@ -106,31 +106,167 @@ console.log(videolocalpath)
      .json(new ApiResponse(200,video,"video successfully uploaded"))
 })
 
-// const getVideoById = asyncHandler(async (req, res) => {
-//     const { videoId } = req.params
-//     //TODO: get video by id
-// })
+const getVideoById = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    //TODO: get video by id
 
-// const updateVideo = asyncHandler(async (req, res) => {
-//     const { videoId } = req.params
-//     //TODO: update video details like title, description, thumbnail
+    if(!isValidObjectId(videoId)){
+      throw new ApiError(404,'invalide video Id')
+    }
 
-// })
+   const video=await Video.findById(videoId)
+   if(!video){
+    throw new ApiError(404,'video is not found')
+   }
 
-// const deleteVideo = asyncHandler(async (req, res) => {
-//     const { videoId } = req.params
-//     //TODO: delete video
-// })
+   return res
+   .status(200)
+   .json(200,videoId,'video is fatched')
 
-// const togglePublishStatus = asyncHandler(async (req, res) => {
-//     const { videoId } = req.params
-// })
+
+})
+
+const updateVideo = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    //TODO: update video details like title, description, thumbnail
+    // find video id
+
+
+        if(!isValidObjectId(videoId)){
+          throw new ApiError(404,'invalide videoId')
+        }
+
+       //request data from user
+        const {title,description}=req.body
+        if(!title || !description){
+          throw new ApiError(401,'title and decription is required')
+        }
+
+
+      //thumnail from user        
+        const thumnailfromUser=req.file?.path
+        if(!thumnailfromUser){
+          throw new ApiError(401,'thumnail is required')
+        }
+
+
+        //uploade thumnail on cloundnary
+        const uploadthumnail=await uplodeOnCloudnary(thumnailfromUser)
+        if(!uploadthumnail){
+          throw new ApiError(500, 'thumnail is not uplaoded on cloundanry')
+        }
+
+
+        //find video help of videoId
+       const video=await Video.findById(videoId)
+
+       
+       
+       
+       
+       if(!video){
+         throw new ApiError(405,'video id not found')
+        }
+
+
+
+        // math video owner and user
+      if(video.Owner !==req.user._id){
+        throw new ApiError('video owner and user not match ')
+      }
+       const updateVideo=await Video.findByIdAndUpadate(
+        videoId,{
+          $set:{
+            title,
+            description,
+            Thumbnail:uploadthumnail
+
+          }
+        },
+        {
+          new:true
+        }
+       )
+  
+      return res
+      .status(200)
+      .json(200,updateVideo,'video upadted successfully')
+    
+})
+
+const deleteVideo = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    //TODO: delete video
+
+    if(!isValidObjectId(videoId)){
+      throw new ApiError(404,'video id is not valide')
+    }
+
+
+    const video=await Video.findById(videoId)
+    if(!video){
+          throw new ApiError(404,'video id is  not found')
+    }
+
+
+    if (video.Owner !== req.user._id){
+      throw new ApiError(400,'inavlide user')
+    }
+
+    const dilateVideoCloundnary=await deleteFromCloudinary(video.videoFile)
+    if(!dilateVideoCloundnary){
+      throw new ApiError(400,'video is not deleted')
+    }
+  
+    const dilatethumbnailCloundinary=await deleteFromCloudinary(video.Thumbnail)
+    if(!dilatethumbnailCloundinary){
+      throw new ApiError(400,'thumbnail is not deleted')
+    }
+    const dilateVideo=await video.findByIdAndDelete(videoId)
+    if(!dilateVideo){
+      throw new ApiError(500,'video is not dilate')
+    }
+     return res
+     .status(200)
+     .json(200,'video dilate success fully')
+    
+})
+
+const togglePublishStatus = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+
+    if(!isValidObjectId(videoId)){
+      throw new ApiError(401,'object id is not valide')
+    }
+    const video=Video.findById(videoId)
+    if(!video){
+      throw new ApiError(400,'videoid is not found')
+    }
+    if(video.Owner !==req.user._id){
+      throw new ApiError(404,'user is not match')
+    }
+    const toglevideopublished=await video.findByIdAndUpadate(
+      videoId,
+      {
+        $set:{
+          ispubisPublished:!video.published
+        }
+      },
+      {
+        new:true
+      }
+    )
+
+    return res
+    .status(200)
+    .json(200,toglevideopublished,'ttoglevideopublished success')
+})
 
 export {
     getAllVideos,
     publishAVideo,
-    // getVideoById,
-    // updateVideo,
-    // deleteVideo,
+    getVideoById,
+    updateVideo,
+    deleteVideo,
 //     togglePublishStatus
 }
