@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {upload} from '../middlewares/multer.middleware.js'
-import {publishAVideo}   from  '../controlers/video.controlers.js'
+import {publishAVideo,getVideoById,updateVideo,deleteVideo,togglePublishStatus}   from  '../controlers/video.controlers.js'
 
 
 
@@ -22,5 +22,10 @@ routes.route('/videouplode').post(
  ]),
  publishAVideo
 )
+
+routes.route('/videoId').post(getVideoById)
+routes.route('/updateVideo').post(updateVideo)
+routes.route('/deleteVideo').post(deleteVideo)
+routes.route('/publishedvideo').post(togglePublishStatus)
 
 export default routes
