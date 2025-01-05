@@ -23,9 +23,10 @@ app.use(express.static("public"))
 
 //Routes import
 import userRoute from './routes/user.routes.js'
+import videoRoute    from  './routes/video.routes.js'
 
 app.use('/api/v1/users',userRoute)
-
+app.use('/api/v1/videos',videoRoute)
 //export default app
 
 export {app}
